@@ -1,6 +1,6 @@
 {
   "name": "jena-tdb",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Wrapper for Jena TDB command line tools",
   "main": "index.js",
   "scripts": {
