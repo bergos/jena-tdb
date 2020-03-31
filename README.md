@@ -1,101 +1,122 @@
 # jena-tdb
 
-Wrapper for Jena TDB command line tools with RDFJS compatible interface.
+Wrapper for Jena TDB command line tools with RDF/JS compatible interface.
 
 ## Usage
 
-The package exports the `Tdb` class.
-Instance of the class must be created using the constructor.
+This package provides a `ParsingClient` and a `StreamClient` for read and write access to Jena TDB datasets.
+Both classes use an instance of the `Endpoint` class for raw access.
+ 
+### ParsingClient ({ bin, db, factory })
 
-### Tdb({ binPath, dbPath, factory })
+The `ParsingClient` provides an interface that uses arrays to read and write `Quad` objects and rows.
+The constructor accepts the following options:
 
-Creates a new instance of `Tdb`.
-
-- `binPath`: Path to the `bin` folder of Jena as string.
+- `bin`: Path to the `bin` folder of Jena as a string.
   Not required if the `bin` folder is listed in `$PATH`.
-- `dbPath`: Path of the database directory as string.
-  If it's not given a temporary folder is create which can be deleted with `.destroy()`.
-- `factory`: Factory for RDFJS objects.
-  By default `@rdfjs/data-model` and `@rdfjs/dataset` are used.
+- `db`: Path of the database directory as a string.
+  If it's not given a temporary folder is created which can be deleted with `.destroy()`.
+- `factory`: Factory that is used to create the RDF/JS objects.
+  By default, `@rdfjs/data-model` is used.
 
-#### async .destroy()
+#### destroy()
 
 Deletes the folder of the database if a temporary folder was used. 
+
+#### endpoint
+
+`Endpoint` instance used by the client.
+
+#### query.construct (query)
+
+Runs a construct query and returns the result async as an array of RDF/JS `Quad` objects.
+
+- `query`: The construct query as a string.
+
+#### query.select (query)
+
+Runs a select query and returns the result async as an array of rows.
+Each row is an object with the variable as key and the value as an RDF/JS `Term`.
+
+- `query`: The select query as a string.
+
+#### query.update (query)
+
+Runs async an update query.
+
+- `query`: The update query as a string.
+
+#### store.import(quads)
+
+Imports async RDF/JS `Quad` objects from an array or any other object with an iterator interface.
+The quads will be written to a temporary file.
+
+- `quads`: The quads to import provided as an object with an iterator interface.
+
+#### store.dump()
+
+Returns async the complete dataset as an array of RDF/JS `Quad` objects.
+
+### StreamClient ({ bin, db, factory })
+
+The `StreamClient` provides an interface that uses [Node.js Streams](https://nodejs.org/api/stream.html) to read and write `Quad` objects and rows.
+The constructor accepts the following options:
+
+- `bin`: Path to the `bin` folder of Jena as a string.
+  Not required if the `bin` folder is listed in `$PATH`.
+- `db`: Path of the database directory as a string.
+  If it's not given a temporary folder is created which can be deleted with `.destroy()`.
+- `factory`: Factory that is used to create the RDF/JS objects.
+  By default, `@rdfjs/data-model` is used.
+
+#### destroy()
+
+Deletes the folder of the database if a temporary folder was used. 
+
+#### endpoint
+
+`Endpoint` instance used by the client.
+
+#### query.construct (query)
+
+Runs a construct query and returns async a `Readable` stream of RDF/JS `Quad` objects.
+
+- `query`: The construct query as a string.
+
+#### query.select (query)
+
+Runs a select query and returns async a `Readable` stream of the result rows.
+Each row is an object with the variable as key and the value as an RDF/JS `Term`.
+
+- `query`: The select query as a string.
+
+#### query.update (query)
+
+Runs async an update query.
+
+- `query`: The update query as a string.
+
+#### store.import(quadStream)
+
+Imports async RDF/JS `Quad` objects from an array or any other object with an iterator interface.
+The quads will be written to a temporary file.
+
+- `quadStream`: The quads to import provided as a `Readable` stream of RDF/JS `Quad` objects.
+
+#### store.dump()
+
+Returns async the complete dataset as a `Readable` stream of RDF/JS `Quad` objects.
+
+### Endpoint ({ bin, db })
+
+Class for raw access to a TDB instance.
 
 #### async .importFiles(files)
 
 Imports triples and quads from the file system.
 
-- `files`: Array of paths to the files to import.
-
-#### async .importStream(stream, { mediaType })
-
-Imports triples and quads from a stream.
-The content of the stream will be written to a temporary file.
-
-- `stream`: A Readable stream of N-Triples or N-Quads.
-- `mediaType`: Media Type of the given stream.
-  By default `application/n-triples` is used.
-  `application/n-quads` must be used for N-Quads.
-
-#### async .dump()
-
-Returns a RDFJS Dataset of all quads in the database.
-
-#### async .constructQuery(query)
-
-Runs a construct query and returns the result as RDFJS Dataset.
-
-- `query`: The construct query as string.
-
-#### async .selectQuery(query)
-
-Runs a select query and returns the result as an array.
-Each element of the array is an object with the variable as key and the value as a RDFJS Term.
-
-- `query`: The select query as string.
-
-#### async .updateQuery(query)
-
-Runs an update query.
-
-- `query`: The update query as string.
-
-### Tdb.stream
-
-Methods that return a Dataset or an Array are also available in a streaming version.
-Also importing is possible from a RDFJS quad stream.
-The streaming versions of the methods can be called on the `.stream` property like this:
-
-```
-const db = new Tdb({ dbPath: '...' })
-
-const quadStream = await db.stream.dump()
-```
-
-#### async .import(quadStream)
-
-Imports the quads given as a RDFJS quad stream.
-
-- `quadStream`: The RDFJS quad stream.
-
-#### async .dump()
-
-Returns a RDFJS quad stream that emits all quads in the database.
-
-#### async .constructQuery(query)
-
-Runs a construct query and returns the result as RDFJS quad stream.
-
-- `query`: The construct query as string.
-
-#### async .selectQuery(query)
-
-Runs a select query and returns the result as an object stream.
-Each emitted object contains all variables as the key and the value as a RDFJS Term.
-
-- `query`: The select query as string.
+- `files`: Array of file paths to import.
 
 ## Examples
 
-The `examples` folder contains an example that shows how to import a N-Triples file into a DB and run a SELECT query on the imported triples.
+The `examples` folder contains an example that shows how to import an N-Triples file into a DB and run a SELECT query on the imported triples.
